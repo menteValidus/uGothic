@@ -34,6 +34,15 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
+	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	PlayerInputComponent->BindAxis("LookUp", this, &APlayerCharacter::AddControllerPitchInput);
+
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerCharacter::BeginSprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::EndSprint);
 }
 
 void APlayerCharacter::ConfigurePlayerCamera()
@@ -53,3 +62,36 @@ void APlayerCharacter::ConfigurePlayerCamera()
 	GetCharacterMovement()->bIgnoreBaseRotation = true;
 }
 
+void APlayerCharacter::MoveForward(float AxisValue)
+{
+	if ((Controller != nullptr) && (AxisValue != 0.0f))
+	{
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		AddMovementInput(Direction, AxisValue);
+	}
+}
+
+void APlayerCharacter::MoveRight(float AxisValue)
+{
+	if ((Controller != nullptr) && (AxisValue != 0.0f))
+	{
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		AddMovementInput(Direction, AxisValue);
+	}
+}
+
+void APlayerCharacter::BeginSprint()
+{
+	GetCharacterMovement()->MaxWalkSpeed = 1000.0f;
+}
+
+void APlayerCharacter::EndSprint()
+{
+	GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+}
